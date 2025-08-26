@@ -59,7 +59,6 @@ export class Micro {
   }
 
   run(port: number) {
-    console.log(`Server running on port ${port}`);
     Deno.serve({ port }, async (req) => {
       const res = await this.handleRequest(req);
 
