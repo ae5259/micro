@@ -1,7 +1,14 @@
-import { Handler, MicroRequest, MicroResponse, Route } from "./types.ts";
+import {
+  Context,
+  Handler,
+  MicroRequest,
+  MicroResponse,
+  Route,
+} from "./types.ts";
 
 export class Micro {
   private routes: Route[] = [];
+  private log: string = "";
 
   get(path: string, handler: Handler) {
     this.routes.push({ method: "GET", path, handler });
@@ -31,12 +38,20 @@ export class Micro {
 
   async handleRequest(req: Request): Promise<Response> {
     const { method, url } = req;
-    const route = this.findRoute(method, new URL(url).pathname);
+    const pathname = new URL(url).pathname;
+    const route = this.findRoute(method, pathname);
+
+    this.log = `[INFO]: ${
+      new Date().toLocaleString()
+    } - ${method} ${pathname} - `;
 
     if (route) {
       const microReq = new MicroRequest(req);
       const microRes = new MicroResponse();
-      await route.handler(microReq, microRes);
+
+      const context = new Context(microReq, microRes);
+
+      await route.handler(context);
       return microRes.toResponse();
     }
 
@@ -45,6 +60,13 @@ export class Micro {
 
   run(port: number) {
     console.log(`Server running on port ${port}`);
-    Deno.serve({ port }, (req) => this.handleRequest(req));
+    Deno.serve({ port }, async (req) => {
+      const res = await this.handleRequest(req);
+
+      this.log = this.log + res.status;
+
+      console.log(this.log);
+      return res;
+    });
   }
 }

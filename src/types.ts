@@ -1,3 +1,17 @@
+export class Context {
+  req: MicroRequest;
+  res: MicroResponse;
+
+  constructor(req: MicroRequest, res: MicroResponse) {
+    this.req = req;
+    this.res = res;
+  }
+
+  async json(data: unknown) {
+    return await this.res.json(data);
+  }
+}
+
 export class MicroRequest {
   private url: URL;
   public params;
@@ -43,5 +57,5 @@ export class MicroResponse {
   }
 }
 
-export type Handler = (req: MicroRequest, res: MicroResponse) => void;
+export type Handler = (ctx: Context) => void;
 export type Route = { method: string; path: string; handler: Handler };
